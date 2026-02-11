@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VELOCIMOVE | v52.0 Strategic Flight Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020202;
+            --gold: #d4af37;
+            --green: #00ff41;
+            --blue: #00d4ff;
+            --red: #ff3333;
+            --panel: #0a0a0a;
+            --border: #1a1a1a;
+            --dim-text: #444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            background: var(--bg);
+            color: #eee;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        .flight-deck {
+            display: grid;
+            grid-template-columns: 420px 1fr 480px;
+            height: 100vh;
+            border: 4px solid var(--border);
+        }
+
+        /* LEFT: PHASE ENGINE */
+        .sidebar {
+            background: var(--panel);
+            border-right: 2px solid var(--border);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .brand-header {
+            color: var(--gold);
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .version {
+            color: var(--dim-text);
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .phase-container {
+            flex-grow: 1;
+            margin-bottom: 30px;
+        }
+
+        .phase-node {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            background: #080808;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+        }
+
+        .phase-node.active {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            transform: scale(1.03);
+            z-index: 10;
+        }
+
+        .phase-node.complete {
+            border-color: var(--green);
+            background: rgba(0, 255, 65, 0.05);
+            opacity: 0.7;
+        }
+
+        .phase-node.complete::after {
+            content: "✓ ARCHIVED";
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 0.6rem;
+            color: var(--green);
+            letter-spacing: 2px;
+        }
+
+        .phase-number {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--gold);
+            opacity: 0.5;
+            min-width: 40px;
+        }
+
+        .phase-node.active .phase-number {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        .phase-content {
+            flex-grow: 1;
+        }
+
+        .phase-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            color: var(--dim-text);
+            margin-bottom: 5px;
+        }
+
+        .phase-node.active .phase-name {
+            color: #fff;
+        }
+
+        .phase-desc {
+            font-size: 0.7rem;
+            color: var(--dim-text);
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .advance-btn, .swirl-btn {
+            padding: 18px;
+            border: 2px solid var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            font-weight: 700;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .advance-btn:hover:not(:disabled) {
+            background: var(--gold);
+            color: var(--bg);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .advance-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .swirl-btn {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255, 51, 51, 0.1);
+        }
+
+        .swirl-btn:hover {
+            background: var(--red);
+            color: var(--bg);
+        }
+
+        /* CENTER: KINETIC HUD */
+        .main-hud {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #151515 0%, #000 100%);
+            border-right: 2px solid var(--border);
+            padding: 40px;
+        }
+
+        .hud-label {
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 12px;
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+            opacity: 0.8;
+        }
+
+        .propulsion-gauge {
+            font-size: 10rem;
+            font-weight: 900;
+            line-height: 1;
+            text-shadow: 0 0 50px currentColor;
+            transition: color 1s, text-shadow 1s;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        .formula {
+            color: var(--dim-text);
+            font-size: 1.1rem;
+            margin-top: 30px;
+            letter-spacing: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-top: 60px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .metric-label {
+            color: var(--dim-text);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            color: var(--blue);
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .status-bar {
+            border: 2px solid var(--blue);
+            padding: 20px 60px;
+            margin-top: 50px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            transition: all 0.8s;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .phase-indicator {
+            position: absolute;
+            bottom: 30px;
+            color: var(--dim-text);
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+        }
+
+        /* RIGHT: EVIDENCE LEDGER */
+        .ledger {
+            background: var(--panel);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ledger-header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .ledger-title {
+            color: var(--gold);
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 5px;
+        }
+
+        .ledger-subtitle {
+            color: var(--dim-text);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .ledger-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            padding: 15px;
+            border: 1px solid var(--border);
+            background: #080808;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: var(--dim-text);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+        }
+
+        .stat-value {
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+
+        .stat-value.optimal { color: var(--green); }
+        .stat-value.warning { color: var(--gold); }
+        .stat-value.critical { color: var(--red); }
+
+        .ledger-stream {
+            flex-grow: 1;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--dim-text);
+            opacity: 0.5;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .entry {
+            padding: 15px 0;
+            border-bottom: 1px solid #1a1a1a;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .ev-id {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .timestamp {
+            color: var(--dim-text);
+            font-size: 0.65rem;
+        }
+
+        .entry-action {
+            color: #999;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .ledger-footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-rule {
+            color: var(--gold);
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            text-align: center;
+            opacity: 0.6;
+            font-weight: 700;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 1400px) {
+            .flight-deck {
+                grid-template-columns: 360px 1fr 400px;
+            }
+            .propulsion-gauge {
+                font-size: 8rem;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .flight-deck {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            .sidebar, .ledger {
+                border-right: none;
+                border-bottom: 2px solid var(--border);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="flight-deck">
+        <section class="sidebar">
+            <div class="brand-header">VELOCIMOVE</div>
+            <div class="version">v52.0 | SUCCESSION MASTER</div>
+            <div class="phase-container" id="phaseContainer"></div>
+            <div class="controls">
+                <button class="advance-btn" id="advanceBtn">ADVANCE PHASE</button>
+                <button class="swirl-btn" id="swirlBtn" style="display:none;">TRIGGER LOGIC GATE</button>
+            </div>
+        </section>
+
+        <section class="main-hud">
+            <div class="hud-label">DRAG COEFFICIENT</div>
+            <div class="propulsion-gauge" id="dragGauge">0.00</div>
+            <div class="formula">C<sub>d</sub> = (L + S) / V</div>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-label">LATENCY</div>
+                    <div class="metric-value" id="latencyValue">0</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">SWIRL</div>
+                    <div class="metric-value" id="swirlValue">0</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">VELOCITY</div>
+                    <div class="metric-value" id="velocityValue">1</div>
+                </div>
+            </div>
+            <div class="status-bar" id="statusBar">OPTIMAL VELOCITY</div>
+            <div class="phase-indicator" id="phaseIndicator">PHASE 1 OF 8</div>
+        </section>
+
+        <section class="ledger">
+            <div class="ledger-header">
+                <div class="ledger-title">EVIDENCE LEDGER</div>
+                <div class="ledger-subtitle">Forensic Action Log</div>
+            </div>
+            <div class="ledger-stats">
+                <div class="stat">
+                    <span class="stat-label">ENTRIES</span>
+                    <span class="stat-value" id="entryCount">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">C<sub>d</sub> STATUS</span>
+                    <span class="stat-value optimal" id="cdStatus">OPTIMAL</span>
+                </div>
+            </div>
+            <div class="ledger-stream" id="ledgerStream">
+                <div class="empty-state">
+                    <div class="empty-icon">◆</div>
+                    <div class="empty-text">Awaiting evidence generation...</div>
+                </div>
+            </div>
+            <div class="ledger-footer">
+                <div class="footer-rule">IF IT ISN'T IN THE LEDGER, IT NEVER HAPPENED</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const PHASES = [
+            { id: 1, name: 'STRATEGIC INTENT', desc: 'CEO defines the North Star' },
+            { id: 2, name: 'LOGIC SYNTHESIS', desc: '3 Directives, 9 Tactical Moves' },
+            { id: 3, name: 'THE LOGIC GATE', desc: 'Dissonance filter active' },
+            { id: 4, name: 'R-A-I ASSIGNMENT', desc: 'Hard-coding accountability' },
+            { id: 5, name: 'ACTION LEDGER', desc: 'Evidence ID generation' },
+            { id: 6, name: 'VELOCITY AUDIT', desc: 'Drag coefficient monitoring' },
+            { id: 7, name: 'SUCCESSION LOOP', desc: 'Auto-reassignment protocol' },
+            { id: 8, name: 'EXECUTIVE RESOLUTION', desc: 'CEO Seal & Archive' }
+        ];
+
+        let currentPhase = 1;
+        let completedPhases = [];
+        let evidenceEntries = [];
+        let latency = 0;
+        let swirl = 0;
+        let velocity = 1;
+        let dragCoefficient = 0;
+
+        function init() {
+            renderPhases();
+            updateHUD();
+            
+            document.getElementById('advanceBtn').addEventListener('click', advancePhase);
+            document.getElementById('swirlBtn').addEventListener('click', incrementSwirl);
+        }
+
+        function renderPhases() {
+            const container = document.getElementById('phaseContainer');
+            container.innerHTML = PHASES.map(phase => `
+                <div class="phase-node ${currentPhase === phase.id ? 'active' : ''} ${completedPhases.includes(phase.id) ? 'complete' : ''}" data-phase="${phase.id}">
+                    <div class="phase-number">${String(phase.id).padStart(2, '0')}</div>
+                    <div class="phase-content">
+                        <div class="phase-name">${phase.name}</div>
+                        <div class="phase-desc">${phase.desc}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('swirlBtn').style.display = currentPhase === 3 ? 'block' : 'none';
+        }
+
+        function advancePhase() {
+            if (currentPhase < 8) {
+                completedPhases.push(currentPhase);
+                currentPhase++;
+                velocity++;
+                
+                const evidenceId = `VM-${String(currentPhase - 1).padStart(2, '0')}-${Date.now().toString(36).toUpperCase()}`;
+                addEvidenceEntry(evidenceId, `Phase ${currentPhase - 1} archived`);
+                
+                renderPhases();
+                updateHUD();
+            }
+        }
+
+        function incrementSwirl() {
+            swirl++;
+            addEvidenceEntry('LOGIC-GATE', 'Rejected illogical intervention');
+            updateHUD();
+        }
+
+        function addEvidenceEntry(id, action) {
+            const timestamp = new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            evidenceEntries.unshift({ id, action, timestamp });
+            evidenceEntries = evidenceEntries.slice(0, 20);
+            
+            renderLedger();
+        }
+
+        function renderLedger() {
+            const stream = document.getElementById('ledgerStream');
+            
+            if (evidenceEntries.length === 0) {
+                stream.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">◆</div>
+                        <div class="empty-text">Awaiting evidence generation...</div>
+                    </div>
+                `;
+            } else {
+                stream.innerHTML = evidenceEntries.map(entry => `
+                    <div class="entry">
+                        <div class="entry-header">
+                            <span class="ev-id">${entry.id}</span>
+                            <span class="timestamp">${entry.timestamp}</span>
+                        </div>
+                        <div class="entry-action">${entry.action}</div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('entryCount').textContent = evidenceEntries.length;
+        }
+
+        function updateHUD() {
+            dragCoefficient = velocity > 0 ? (latency + swirl) / velocity : 0;
+            
+            const gauge = document.getElementById('dragGauge');
+            gauge.textContent = dragCoefficient.toFixed(2);
+            
+            if (dragCoefficient < 2) {
+                gauge.style.color = 'var(--green)';
+            } else if (dragCoefficient < 5) {
+                gauge.style.color = 'var(--gold)';
+            } else {
+                gauge.style.color = 'var(--red)';
+            }
+            
+            document.getElementById('latencyValue').textContent = latency;
+            document.getElementById('swirlValue').textContent = swirl;
+            document.getElementById('velocityValue').textContent = velocity;
+            
+            const statusBar = document.getElementById('statusBar');
+            if (currentPhase === 8) {
+                statusBar.textContent = 'MISSION SEALED';
+                statusBar.style.borderColor = 'var(--gold)';
+                statusBar.style.color = 'var(--gold)';
+                document.getElementById('advanceBtn').disabled = true;
+                document.getElementById('advanceBtn').textContent = 'MISSION SEALED';
+            } else if (dragCoefficient < 2) {
+                statusBar.textContent = 'OPTIMAL VELOCITY';
+                statusBar.style.borderColor = 'var(--green)';
+                statusBar.style.color = 'var(--green)';
+            } else if (dragCoefficient < 5) {
+                statusBar.textContent = 'FRICTION DETECTED';
+                statusBar.style.borderColor = 'var(--gold)';
+                statusBar.style.color = 'var(--gold)';
+            } else {
+                statusBar.textContent = 'CRITICAL DRAG';
+                statusBar.style.borderColor = 'var(--red)';
+                statusBar.style.color = 'var(--red)';
+            }
+            
+            const cdStatus = document.getElementById('cdStatus');
+            if (dragCoefficient < 2) {
+                cdStatus.textContent = 'OPTIMAL';
+                cdStatus.className = 'stat-value optimal';
+            } else if (dragCoefficient < 5) {
+                cdStatus.textContent = 'ELEVATED';
+                cdStatus.className = 'stat-value warning';
+            } else {
+                cdStatus.textContent = 'CRITICAL';
+                cdStatus.className = 'stat-value critical';
+            }
+            
+            document.getElementById('phaseIndicator').textContent = `PHASE ${currentPhase} OF 8`;
+        }
+
+        init();
+    </script>
+</body>
+</html>
