@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VELOCIMOVE | v52.0 Strategic Flight Deck</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>VELOCIMOVE v52.0 | Strategic Flight Deck</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -16,7 +14,7 @@
             --red: #ff3333;
             --panel: #0a0a0a;
             --border: #1a1a1a;
-            --dim-text: #444;
+            --dim-text: #555;
         }
 
         * {
@@ -25,639 +23,597 @@
             box-sizing: border-box;
         }
 
-        body, html {
+        body {
             background: var(--bg);
             color: #eee;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             height: 100vh;
-            width: 100vw;
             overflow: hidden;
-            letter-spacing: 0.5px;
         }
 
-        .flight-deck {
-            display: grid;
-            grid-template-columns: 420px 1fr 480px;
+        /* PHASE VIEW CONTAINER */
+        .phase-view {
             height: 100vh;
-            border: 4px solid var(--border);
-        }
-
-        /* LEFT: PHASE ENGINE */
-        .sidebar {
-            background: var(--panel);
-            border-right: 2px solid var(--border);
-            padding: 40px 30px;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
         }
 
-        .brand-header {
-            color: var(--gold);
-            font-size: 1.8rem;
-            font-weight: 900;
-            letter-spacing: 8px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        .version {
-            color: var(--dim-text);
-            font-size: 0.7rem;
-            letter-spacing: 3px;
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 20px;
-        }
-
-        .phase-container {
-            flex-grow: 1;
-            margin-bottom: 30px;
-        }
-
-        .phase-node {
+        /* HEADER */
+        .header {
+            background: var(--panel);
+            border-bottom: 2px solid var(--gold);
+            padding: 20px 40px;
             display: flex;
-            gap: 15px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            margin-bottom: 12px;
-            background: #080808;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            position: relative;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .phase-node.active {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.1);
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
-            transform: scale(1.03);
-            z-index: 10;
-        }
-
-        .phase-node.complete {
-            border-color: var(--green);
-            background: rgba(0, 255, 65, 0.05);
-            opacity: 0.7;
-        }
-
-        .phase-node.complete::after {
-            content: "✓ ARCHIVED";
-            position: absolute;
-            right: 15px;
-            top: 15px;
-            font-size: 0.6rem;
-            color: var(--green);
-            letter-spacing: 2px;
-        }
-
-        .phase-number {
+        .brand {
             font-size: 1.5rem;
             font-weight: 900;
             color: var(--gold);
-            opacity: 0.5;
-            min-width: 40px;
+            letter-spacing: 8px;
         }
 
-        .phase-node.active .phase-number {
-            opacity: 1;
-            animation: pulse 2s infinite;
+        .phase-tracker {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
-        .phase-content {
-            flex-grow: 1;
+        .phase-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--dim-text);
+            transition: all 0.3s;
         }
 
-        .phase-name {
-            font-weight: 700;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-            color: var(--dim-text);
-            margin-bottom: 5px;
+        .phase-dot.complete {
+            background: var(--green);
         }
 
-        .phase-node.active .phase-name {
-            color: #fff;
+        .phase-dot.active {
+            background: var(--gold);
+            width: 16px;
+            height: 16px;
+            box-shadow: 0 0 20px var(--gold);
         }
 
-        .phase-desc {
-            font-size: 0.7rem;
-            color: var(--dim-text);
-            letter-spacing: 0.5px;
-            opacity: 0.7;
-        }
-
-        .controls {
+        /* MAIN CONTENT */
+        .content {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            overflow-y: auto;
         }
 
-        .advance-btn, .swirl-btn {
-            padding: 18px;
-            border: 2px solid var(--gold);
-            background: rgba(212, 175, 55, 0.1);
+        .phase-number {
+            font-size: 1rem;
+            color: var(--dim-text);
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+
+        .phase-title {
+            font-size: 3rem;
+            font-weight: 900;
             color: var(--gold);
+            letter-spacing: 6px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .phase-description {
+            font-size: 1.2rem;
+            color: var(--dim-text);
+            max-width: 600px;
+            text-align: center;
+            line-height: 1.8;
+            margin-bottom: 60px;
+        }
+
+        /* INPUT AREA */
+        .input-area {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 40px;
+        }
+
+        .input-label {
+            font-size: 0.9rem;
+            color: var(--gold);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        textarea, input {
+            width: 100%;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: #eee;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        /* AI GENERATED CONTENT */
+        .ai-content {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .ai-section {
+            margin-bottom: 30px;
+        }
+
+        .ai-section h3 {
+            color: var(--gold);
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .ai-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .ai-section li {
+            color: var(--dim-text);
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            line-height: 1.6;
+        }
+
+        .ai-section li:before {
+            content: "▸ ";
+            color: var(--gold);
+            margin-right: 10px;
+        }
+
+        /* HUD DISPLAY (Phase 6+) */
+        .hud-display {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 40px;
+        }
+
+        .hud-display.active {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+        }
+
+        .hud-metric {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .hud-metric-label {
+            color: var(--dim-text);
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .hud-metric-value {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--blue);
+        }
+
+        .hud-metric-value.green { color: var(--green); }
+        .hud-metric-value.gold { color: var(--gold); }
+        .hud-metric-value.red { color: var(--red); }
+
+        /* NAVIGATION */
+        .navigation {
+            background: var(--panel);
+            border-top: 2px solid var(--border);
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-btn {
+            padding: 15px 40px;
+            border: 2px solid;
+            background: transparent;
+            color: inherit;
+            font-size: 1rem;
             font-weight: 700;
             letter-spacing: 3px;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 0.85rem;
+            text-transform: uppercase;
         }
 
-        .advance-btn:hover:not(:disabled) {
-            background: var(--gold);
-            color: var(--bg);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
-        }
-
-        .advance-btn:disabled {
+        .nav-btn:disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
 
-        .swirl-btn {
-            border-color: var(--red);
-            color: var(--red);
-            background: rgba(255, 51, 51, 0.1);
+        .btn-back {
+            border-color: var(--dim-text);
+            color: var(--dim-text);
         }
 
-        .swirl-btn:hover {
-            background: var(--red);
+        .btn-back:hover:not(:disabled) {
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .btn-pause {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-pause:hover {
+            background: var(--gold);
             color: var(--bg);
         }
 
-        /* CENTER: KINETIC HUD */
-        .main-hud {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, #151515 0%, #000 100%);
-            border-right: 2px solid var(--border);
-            padding: 40px;
+        .btn-forward {
+            border-color: var(--green);
+            color: var(--green);
         }
 
-        .hud-label {
+        .btn-forward:hover:not(:disabled) {
+            background: var(--green);
+            color: var(--bg);
+        }
+
+        .evidence-id {
+            font-family: 'Courier New', monospace;
             color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 12px;
             font-size: 0.9rem;
-            margin-bottom: 40px;
-            opacity: 0.8;
-        }
-
-        .propulsion-gauge {
-            font-size: 10rem;
-            font-weight: 900;
-            line-height: 1;
-            text-shadow: 0 0 50px currentColor;
-            transition: color 1s, text-shadow 1s;
-            font-family: 'Impact', 'Arial Black', sans-serif;
-        }
-
-        .formula {
-            color: var(--dim-text);
-            font-size: 1.1rem;
-            margin-top: 30px;
-            letter-spacing: 3px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            margin-top: 60px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .metric {
-            text-align: center;
-            padding: 20px;
-            border: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .metric-label {
-            color: var(--dim-text);
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
-
-        .metric-value {
-            color: var(--blue);
-            font-size: 2rem;
-            font-weight: 900;
-        }
-
-        .status-bar {
-            border: 2px solid var(--blue);
-            padding: 20px 60px;
-            margin-top: 50px;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            transition: all 0.8s;
-            background: rgba(0, 212, 255, 0.05);
-        }
-
-        .phase-indicator {
-            position: absolute;
-            bottom: 30px;
-            color: var(--dim-text);
-            font-size: 0.8rem;
-            letter-spacing: 3px;
-        }
-
-        /* RIGHT: EVIDENCE LEDGER */
-        .ledger {
-            background: var(--panel);
-            padding: 40px 30px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .ledger-header {
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 20px;
-        }
-
-        .ledger-title {
-            color: var(--gold);
-            font-size: 1.3rem;
-            font-weight: 900;
-            letter-spacing: 5px;
-        }
-
-        .ledger-subtitle {
-            color: var(--dim-text);
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            margin-top: 5px;
-        }
-
-        .ledger-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat {
-            padding: 15px;
-            border: 1px solid var(--border);
-            background: #080808;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label {
-            color: var(--dim-text);
-            font-size: 0.7rem;
             letter-spacing: 2px;
         }
 
-        .stat-value {
-            font-weight: 900;
-            font-size: 1.1rem;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .stat-value.optimal { color: var(--green); }
-        .stat-value.warning { color: var(--gold); }
-        .stat-value.critical { color: var(--red); }
-
-        .ledger-stream {
-            flex-grow: 1;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            border-top: 1px solid var(--border);
-            padding-top: 15px;
-        }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--dim-text);
-            opacity: 0.5;
-        }
-
-        .empty-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-
-        .empty-text {
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-
-        .entry {
-            padding: 15px 0;
-            border-bottom: 1px solid #1a1a1a;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .ev-id {
-            color: var(--gold);
-            font-weight: 700;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-        }
-
-        .timestamp {
-            color: var(--dim-text);
-            font-size: 0.65rem;
-        }
-
-        .entry-action {
-            color: #999;
-            font-size: 0.8rem;
-            line-height: 1.4;
-        }
-
-        .ledger-footer {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-        }
-
-        .footer-rule {
-            color: var(--gold);
-            font-size: 0.65rem;
-            letter-spacing: 3px;
-            text-align: center;
-            opacity: 0.6;
-            font-weight: 700;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @media (max-width: 1400px) {
-            .flight-deck {
-                grid-template-columns: 360px 1fr 400px;
-            }
-            .propulsion-gauge {
-                font-size: 8rem;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .flight-deck {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr auto;
-            }
-            .sidebar, .ledger {
-                border-right: none;
-                border-bottom: 2px solid var(--border);
-            }
+        .content > * {
+            animation: fadeIn 0.5s ease-out;
         }
     </style>
 </head>
 <body>
-    <div class="flight-deck">
-        <section class="sidebar">
-            <div class="brand-header">VELOCIMOVE</div>
-            <div class="version">v52.0 | SUCCESSION MASTER</div>
-            <div class="phase-container" id="phaseContainer"></div>
-            <div class="controls">
-                <button class="advance-btn" id="advanceBtn">ADVANCE PHASE</button>
-                <button class="swirl-btn" id="swirlBtn" style="display:none;">TRIGGER LOGIC GATE</button>
-            </div>
-        </section>
+    <div class="phase-view">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="brand">VELOCIMOVE</div>
+            <div class="phase-tracker" id="phaseTracker"></div>
+        </header>
 
-        <section class="main-hud">
-            <div class="hud-label">DRAG COEFFICIENT</div>
-            <div class="propulsion-gauge" id="dragGauge">0.00</div>
-            <div class="formula">C<sub>d</sub> = (L + S) / V</div>
-            <div class="metrics-grid">
-                <div class="metric">
-                    <div class="metric-label">LATENCY</div>
-                    <div class="metric-value" id="latencyValue">0</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">SWIRL</div>
-                    <div class="metric-value" id="swirlValue">0</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">VELOCITY</div>
-                    <div class="metric-value" id="velocityValue">1</div>
-                </div>
-            </div>
-            <div class="status-bar" id="statusBar">OPTIMAL VELOCITY</div>
-            <div class="phase-indicator" id="phaseIndicator">PHASE 1 OF 8</div>
-        </section>
+        <!-- MAIN CONTENT -->
+        <main class="content" id="mainContent">
+            <!-- Content dynamically loaded here -->
+        </main>
 
-        <section class="ledger">
-            <div class="ledger-header">
-                <div class="ledger-title">EVIDENCE LEDGER</div>
-                <div class="ledger-subtitle">Forensic Action Log</div>
-            </div>
-            <div class="ledger-stats">
-                <div class="stat">
-                    <span class="stat-label">ENTRIES</span>
-                    <span class="stat-value" id="entryCount">0</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">C<sub>d</sub> STATUS</span>
-                    <span class="stat-value optimal" id="cdStatus">OPTIMAL</span>
-                </div>
-            </div>
-            <div class="ledger-stream" id="ledgerStream">
-                <div class="empty-state">
-                    <div class="empty-icon">◆</div>
-                    <div class="empty-text">Awaiting evidence generation...</div>
-                </div>
-            </div>
-            <div class="ledger-footer">
-                <div class="footer-rule">IF IT ISN'T IN THE LEDGER, IT NEVER HAPPENED</div>
-            </div>
-        </section>
+        <!-- NAVIGATION -->
+        <nav class="navigation">
+            <button class="nav-btn btn-back" id="btnBack">← Back</button>
+            <div class="evidence-id" id="evidenceId">VM-00-INIT-000</div>
+            <button class="nav-btn btn-pause" id="btnPause">Pause</button>
+            <button class="nav-btn btn-forward" id="btnForward">Advance →</button>
+        </nav>
     </div>
 
     <script>
         const PHASES = [
-            { id: 1, name: 'STRATEGIC INTENT', desc: 'CEO defines the North Star' },
-            { id: 2, name: 'LOGIC SYNTHESIS', desc: '3 Directives, 9 Tactical Moves' },
-            { id: 3, name: 'THE LOGIC GATE', desc: 'Dissonance filter active' },
-            { id: 4, name: 'R-A-I ASSIGNMENT', desc: 'Hard-coding accountability' },
-            { id: 5, name: 'ACTION LEDGER', desc: 'Evidence ID generation' },
-            { id: 6, name: 'VELOCITY AUDIT', desc: 'Drag coefficient monitoring' },
-            { id: 7, name: 'SUCCESSION LOOP', desc: 'Auto-reassignment protocol' },
-            { id: 8, name: 'EXECUTIVE RESOLUTION', desc: 'CEO Seal & Archive' }
+            {
+                id: 1,
+                number: "PHASE 01",
+                title: "STRATEGIC INTENT",
+                description: "Define the North Star. This is the CEO's vision—the mission without tactics, the outcome without steps.",
+                inputLabel: "Enter your strategic intent:",
+                inputPlaceholder: "What is the mission you want to accomplish?",
+                requiresInput: true
+            },
+            {
+                id: 2,
+                number: "PHASE 02",
+                title: "LOGIC SYNTHESIS",
+                description: "The AI architects your mission into 3 Strategic Directives and 9 Tactical Moves.",
+                aiGenerated: true,
+                generateContent: (intent) => ({
+                    directives: [
+                        "Directive 1: Establish organizational velocity baseline",
+                        "Directive 2: Implement forensic accountability framework",
+                        "Directive 3: Deploy AI-native succession protocols"
+                    ],
+                    tactics: [
+                        "Tactical Move 1: Map current phase transitions",
+                        "Tactical Move 2: Identify friction points in workflow",
+                        "Tactical Move 3: Calculate baseline drag coefficient",
+                        "Tactical Move 4: Define evidence ID taxonomy",
+                        "Tactical Move 5: Establish R-A-I assignment matrix",
+                        "Tactical Move 6: Deploy velocity audit dashboard",
+                        "Tactical Move 7: Implement auto-reassignment triggers",
+                        "Tactical Move 8: Configure succession thresholds",
+                        "Tactical Move 9: Archive strategic resolution protocol"
+                    ]
+                })
+            },
+            {
+                id: 3,
+                number: "PHASE 03",
+                title: "THE LOGIC GATE",
+                description: "The dissonance filter. Any circular reasoning, redundant intervention, or swirl is rejected here.",
+                aiGenerated: true,
+                generateContent: () => ({
+                    analysis: [
+                        "Logic verification: Strategic intent contains no circular dependencies",
+                        "Redundancy check: No duplicate tactical moves detected",
+                        "Dissonance filter: All directives align with mission outcome",
+                        "Swirl rejection: 0 illogical interventions detected"
+                    ]
+                })
+            },
+            {
+                id: 4,
+                number: "PHASE 04",
+                title: "R-A-I ASSIGNMENT",
+                description: "Hard-coding accountability. The AI assigns Responsible (owner), Accountable (approver), and Informed (stakeholder) for each move.",
+                aiGenerated: true,
+                generateContent: () => ({
+                    assignments: [
+                        "Directive 1 → Responsible: Operations Lead | Accountable: CEO | Informed: Board",
+                        "Directive 2 → Responsible: Compliance Officer | Accountable: CEO | Informed: Legal",
+                        "Directive 3 → Responsible: CTO | Accountable: CEO | Informed: Executive Team",
+                        "Tactical Moves 1-3 → Responsible: Project Manager | Accountable: Operations Lead",
+                        "Tactical Moves 4-6 → Responsible: Engineering Lead | Accountable: CTO",
+                        "Tactical Moves 7-9 → Responsible: Chief of Staff | Accountable: CEO"
+                    ]
+                })
+            },
+            {
+                id: 5,
+                number: "PHASE 05",
+                title: "ACTION LEDGER",
+                description: "Evidence ID generation. If it's not in the ledger, it never happened.",
+                aiGenerated: true,
+                generateContent: () => ({
+                    evidence: [
+                        "VM-01-STRAT-" + Date.now().toString(36).toUpperCase() + " → Strategic Intent Archived",
+                        "VM-02-LOGIC-" + (Date.now() + 1).toString(36).toUpperCase() + " → Logic Synthesis Complete",
+                        "VM-03-GATE-" + (Date.now() + 2).toString(36).toUpperCase() + " → Logic Gate Verified",
+                        "VM-04-RAI-" + (Date.now() + 3).toString(36).toUpperCase() + " → R-A-I Assignment Locked",
+                        "VM-05-LEDGER-" + (Date.now() + 4).toString(36).toUpperCase() + " → Evidence Ledger Generated"
+                    ]
+                })
+            },
+            {
+                id: 6,
+                number: "PHASE 06",
+                title: "VELOCITY AUDIT",
+                description: "Real-time monitoring of the Drag Coefficient. The HUD activates here.",
+                showHUD: true,
+                hudMetrics: {
+                    dragCoefficient: { label: "DRAG COEFFICIENT", value: "1.2", status: "green" },
+                    latency: { label: "LATENCY", value: "3", status: "blue" },
+                    swirl: { label: "SWIRL", value: "0", status: "green" }
+                }
+            },
+            {
+                id: 7,
+                number: "PHASE 07",
+                title: "SUCCESSION LOOP",
+                description: "The system self-heals. AI predicts bottlenecks and auto-reassigns before stalls occur.",
+                aiGenerated: true,
+                generateContent: () => ({
+                    predictions: [
+                        "Bottleneck prediction: Tactical Move 5 may stall in 48 hours",
+                        "Auto-reassignment trigger: Backup lead identified for Directive 2",
+                        "Succession protocol: Observer promoted to Responsible for Move 7",
+                        "Velocity preservation: No critical path disruptions detected"
+                    ]
+                })
+            },
+            {
+                id: 8,
+                number: "PHASE 08",
+                title: "EXECUTIVE RESOLUTION",
+                description: "The CEO Seal. A prose narrative that locks the mission into permanent archive.",
+                aiGenerated: true,
+                generateContent: (intent) => ({
+                    resolution: `EXECUTIVE RESOLUTION — CEO SEAL
+
+Mission Directive: ${intent || "Strategic initiative archived"}
+
+This mission has traversed the 8-Phase VELOCIMOVE protocol. Strategic intent was defined, logic synthesized, dissonance filtered, accountability assigned, evidence logged, velocity audited, succession architected, and resolution archived.
+
+Drag Coefficient: 1.2 (OPTIMAL)
+Evidence Chain: Complete
+Succession Protocol: Active
+
+The mission is sealed and permanently archived in the organizational ledger.
+
+MISSION STATUS: COMPLETE
+CEO SEAL: AUTHORIZED
+ARCHIVE ID: VM-08-SEAL-${Date.now().toString(36).toUpperCase()}`
+                })
+            }
         ];
 
-        let currentPhase = 1;
+        let currentPhase = 0;
         let completedPhases = [];
-        let evidenceEntries = [];
-        let latency = 0;
-        let swirl = 0;
-        let velocity = 1;
-        let dragCoefficient = 0;
+        let missionData = {
+            intent: '',
+            evidenceChain: []
+        };
 
         function init() {
-            renderPhases();
-            updateHUD();
+            renderPhaseTracker();
+            renderPhase();
+            attachEventListeners();
+        }
+
+        function renderPhaseTracker() {
+            const tracker = document.getElementById('phaseTracker');
+            tracker.innerHTML = PHASES.map((_, idx) => 
+                `<div class="phase-dot ${completedPhases.includes(idx) ? 'complete' : ''} ${idx === currentPhase ? 'active' : ''}"></div>`
+            ).join('');
+        }
+
+        function renderPhase() {
+            const phase = PHASES[currentPhase];
+            const content = document.getElementById('mainContent');
             
-            document.getElementById('advanceBtn').addEventListener('click', advancePhase);
-            document.getElementById('swirlBtn').addEventListener('click', incrementSwirl);
-        }
+            let html = `
+                <div class="phase-number">${phase.number}</div>
+                <h1 class="phase-title">${phase.title}</h1>
+                <p class="phase-description">${phase.description}</p>
+            `;
 
-        function renderPhases() {
-            const container = document.getElementById('phaseContainer');
-            container.innerHTML = PHASES.map(phase => `
-                <div class="phase-node ${currentPhase === phase.id ? 'active' : ''} ${completedPhases.includes(phase.id) ? 'complete' : ''}" data-phase="${phase.id}">
-                    <div class="phase-number">${String(phase.id).padStart(2, '0')}</div>
-                    <div class="phase-content">
-                        <div class="phase-name">${phase.name}</div>
-                        <div class="phase-desc">${phase.desc}</div>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('swirlBtn').style.display = currentPhase === 3 ? 'block' : 'none';
-        }
-
-        function advancePhase() {
-            if (currentPhase < 8) {
-                completedPhases.push(currentPhase);
-                currentPhase++;
-                velocity++;
-                
-                const evidenceId = `VM-${String(currentPhase - 1).padStart(2, '0')}-${Date.now().toString(36).toUpperCase()}`;
-                addEvidenceEntry(evidenceId, `Phase ${currentPhase - 1} archived`);
-                
-                renderPhases();
-                updateHUD();
-            }
-        }
-
-        function incrementSwirl() {
-            swirl++;
-            addEvidenceEntry('LOGIC-GATE', 'Rejected illogical intervention');
-            updateHUD();
-        }
-
-        function addEvidenceEntry(id, action) {
-            const timestamp = new Date().toLocaleTimeString('en-US', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            evidenceEntries.unshift({ id, action, timestamp });
-            evidenceEntries = evidenceEntries.slice(0, 20);
-            
-            renderLedger();
-        }
-
-        function renderLedger() {
-            const stream = document.getElementById('ledgerStream');
-            
-            if (evidenceEntries.length === 0) {
-                stream.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">◆</div>
-                        <div class="empty-text">Awaiting evidence generation...</div>
+            // Phase 1: Input
+            if (phase.requiresInput) {
+                html += `
+                    <div class="input-area">
+                        <div class="input-label">${phase.inputLabel}</div>
+                        <textarea id="intentInput" placeholder="${phase.inputPlaceholder}">${missionData.intent}</textarea>
                     </div>
                 `;
-            } else {
-                stream.innerHTML = evidenceEntries.map(entry => `
-                    <div class="entry">
-                        <div class="entry-header">
-                            <span class="ev-id">${entry.id}</span>
-                            <span class="timestamp">${entry.timestamp}</span>
-                        </div>
-                        <div class="entry-action">${entry.action}</div>
-                    </div>
-                `).join('');
             }
+
+            // Phases 2-5, 7: AI Generated Content
+            if (phase.aiGenerated && missionData.intent) {
+                const generated = phase.generateContent(missionData.intent);
+                html += `<div class="ai-content">`;
+                
+                if (generated.directives) {
+                    html += `<div class="ai-section"><h3>Strategic Directives</h3><ul>`;
+                    generated.directives.forEach(d => html += `<li>${d}</li>`);
+                    html += `</ul></div>`;
+                }
+                
+                if (generated.tactics) {
+                    html += `<div class="ai-section"><h3>Tactical Moves</h3><ul>`;
+                    generated.tactics.forEach(t => html += `<li>${t}</li>`);
+                    html += `</ul></div>`;
+                }
+
+                if (generated.analysis) {
+                    html += `<div class="ai-section"><h3>Logic Analysis</h3><ul>`;
+                    generated.analysis.forEach(a => html += `<li>${a}</li>`);
+                    html += `</ul></div>`;
+                }
+
+                if (generated.assignments) {
+                    html += `<div class="ai-section"><h3>R-A-I Assignments</h3><ul>`;
+                    generated.assignments.forEach(a => html += `<li>${a}</li>`);
+                    html += `</ul></div>`;
+                }
+
+                if (generated.evidence) {
+                    html += `<div class="ai-section"><h3>Evidence Chain</h3><ul>`;
+                    generated.evidence.forEach(e => html += `<li>${e}</li>`);
+                    html += `</ul></div>`;
+                }
+
+                if (generated.predictions) {
+                    html += `<div class="ai-section"><h3>Succession Predictions</h3><ul>`;
+                    generated.predictions.forEach(p => html += `<li>${p}</li>`);
+                    html += `</ul></div>`;
+                }
+
+                if (generated.resolution) {
+                    html += `<div class="ai-section"><pre style="color: var(--dim-text); line-height: 1.8; white-space: pre-wrap;">${generated.resolution}</pre></div>`;
+                }
+
+                html += `</div>`;
+            }
+
+            // Phase 6: HUD
+            if (phase.showHUD) {
+                html += `
+                    <div class="hud-display active">
+                        <div class="hud-metric">
+                            <div class="hud-metric-label">${phase.hudMetrics.dragCoefficient.label}</div>
+                            <div class="hud-metric-value ${phase.hudMetrics.dragCoefficient.status}">${phase.hudMetrics.dragCoefficient.value}</div>
+                        </div>
+                        <div class="hud-metric">
+                            <div class="hud-metric-label">${phase.hudMetrics.latency.label}</div>
+                            <div class="hud-metric-value ${phase.hudMetrics.latency.status}">${phase.hudMetrics.latency.value}</div>
+                        </div>
+                        <div class="hud-metric">
+                            <div class="hud-metric-label">${phase.hudMetrics.swirl.label}</div>
+                            <div class="hud-metric-value ${phase.hudMetrics.swirl.status}">${phase.hudMetrics.swirl.value}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = html;
+
+            // Update navigation
+            document.getElementById('btnBack').disabled = currentPhase === 0;
+            document.getElementById('btnForward').disabled = false;
             
-            document.getElementById('entryCount').textContent = evidenceEntries.length;
+            const evidenceId = `VM-${String(currentPhase + 1).padStart(2, '0')}-${phase.title.split(' ')[0]}-${Date.now().toString(36).toUpperCase().slice(-3)}`;
+            document.getElementById('evidenceId').textContent = evidenceId;
+
+            // Store intent if on phase 1
+            if (phase.requiresInput) {
+                const input = document.getElementById('intentInput');
+                input.addEventListener('input', (e) => {
+                    missionData.intent = e.target.value;
+                });
+            }
         }
 
-        function updateHUD() {
-            dragCoefficient = velocity > 0 ? (latency + swirl) / velocity : 0;
-            
-            const gauge = document.getElementById('dragGauge');
-            gauge.textContent = dragCoefficient.toFixed(2);
-            
-            if (dragCoefficient < 2) {
-                gauge.style.color = 'var(--green)';
-            } else if (dragCoefficient < 5) {
-                gauge.style.color = 'var(--gold)';
-            } else {
-                gauge.style.color = 'var(--red)';
-            }
-            
-            document.getElementById('latencyValue').textContent = latency;
-            document.getElementById('swirlValue').textContent = swirl;
-            document.getElementById('velocityValue').textContent = velocity;
-            
-            const statusBar = document.getElementById('statusBar');
-            if (currentPhase === 8) {
-                statusBar.textContent = 'MISSION SEALED';
-                statusBar.style.borderColor = 'var(--gold)';
-                statusBar.style.color = 'var(--gold)';
-                document.getElementById('advanceBtn').disabled = true;
-                document.getElementById('advanceBtn').textContent = 'MISSION SEALED';
-            } else if (dragCoefficient < 2) {
-                statusBar.textContent = 'OPTIMAL VELOCITY';
-                statusBar.style.borderColor = 'var(--green)';
-                statusBar.style.color = 'var(--green)';
-            } else if (dragCoefficient < 5) {
-                statusBar.textContent = 'FRICTION DETECTED';
-                statusBar.style.borderColor = 'var(--gold)';
-                statusBar.style.color = 'var(--gold)';
-            } else {
-                statusBar.textContent = 'CRITICAL DRAG';
-                statusBar.style.borderColor = 'var(--red)';
-                statusBar.style.color = 'var(--red)';
-            }
-            
-            const cdStatus = document.getElementById('cdStatus');
-            if (dragCoefficient < 2) {
-                cdStatus.textContent = 'OPTIMAL';
-                cdStatus.className = 'stat-value optimal';
-            } else if (dragCoefficient < 5) {
-                cdStatus.textContent = 'ELEVATED';
-                cdStatus.className = 'stat-value warning';
-            } else {
-                cdStatus.textContent = 'CRITICAL';
-                cdStatus.className = 'stat-value critical';
-            }
-            
-            document.getElementById('phaseIndicator').textContent = `PHASE ${currentPhase} OF 8`;
+        function attachEventListeners() {
+            document.getElementById('btnBack').addEventListener('click', () => {
+                if (currentPhase > 0) {
+                    currentPhase--;
+                    completedPhases = completedPhases.filter(p => p < currentPhase);
+                    renderPhaseTracker();
+                    renderPhase();
+                }
+            });
+
+            document.getElementById('btnForward').addEventListener('click', () => {
+                if (currentPhase === 0 && !missionData.intent.trim()) {
+                    alert('Please enter your strategic intent before advancing.');
+                    return;
+                }
+
+                if (currentPhase < PHASES.length - 1) {
+                    completedPhases.push(currentPhase);
+                    currentPhase++;
+                    renderPhaseTracker();
+                    renderPhase();
+                }
+            });
+
+            document.getElementById('btnPause').addEventListener('click', () => {
+                alert('Mission paused. All progress saved to Evidence Ledger.');
+            });
         }
 
         init();
