@@ -211,14 +211,16 @@
         .validation-controls {
             display: flex;
             gap: 15px;
-            margin-top: 15px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
         }
 
         .validate-btn, .reject-btn {
-            padding: 12px 30px;
+            padding: 15px 30px;
             border: 2px solid;
             background: transparent;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 700;
             letter-spacing: 2px;
             cursor: pointer;
@@ -244,6 +246,19 @@
         .reject-btn:hover {
             background: var(--red);
             color: var(--bg);
+        }
+
+        .validation-message {
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid var(--gold);
+            padding: 15px;
+            margin-bottom: 20px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            color: var(--gold);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
         }
 
         /* AI CONTENT */
@@ -301,7 +316,7 @@
             font-size: 0.9rem;
         }
 
-        /* METRICS DASHBOARD (replaces HUD) */
+        /* METRICS DASHBOARD */
         .metrics-dashboard {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -734,7 +749,7 @@ This mission has traversed the complete 8-Phase VELOCIMOVES protocol:
 
 PERFORMANCE METRICS:
 Mission Velocity: 1.6 phases/week
-Swirl Count: 0 rejections
+Swirl Count: ${window.swirlCount || 0} rejections
 Time to Seal: ${Math.floor((Date.now() - window.missionStartTime) / 86400000)} days
 Owner Performance: 100% on-time delivery
 Evidence Chain: Complete and immutable
@@ -767,6 +782,7 @@ TIMESTAMP: ${new Date().toISOString()}
             validations: {}
         };
         window.missionStartTime = Date.now();
+        window.swirlCount = 0;
 
         function init() {
             renderPhaseTracker();
@@ -805,6 +821,15 @@ TIMESTAMP: ${new Date().toISOString()}
                     <div class="output-explainer">
                         <h4>${phase.explainer.title}</h4>
                         <p>${phase.explainer.text}</p>
+                    </div>
+                `;
+            }
+
+            // Show validation message if needed
+            if (phase.requiresValidation && !isLocked && missionData.validations[phase.id] === undefined) {
+                html += `
+                    <div class="validation-message">
+                        ⚠ HUMAN VALIDATION REQUIRED — Click Approve or Reject to continue
                     </div>
                 `;
             }
@@ -868,16 +893,16 @@ TIMESTAMP: ${new Date().toISOString()}
                 }
 
                 html += `</div>`;
+            }
 
-                // Validation controls for phases 3, 4, 7
-                if (phase.requiresValidation && !isLocked && !missionData.validations[phase.id]) {
-                    html += `
-                        <div class="validation-controls">
-                            <button class="validate-btn" onclick="validatePhase(true)">✓ APPROVE</button>
-                            <button class="reject-btn" onclick="validatePhase(false)">✗ REJECT</button>
-                        </div>
-                    `;
-                }
+            // Validation controls for phases 3, 4, 7
+            if (phase.requiresValidation && !isLocked && missionData.validations[phase.id] === undefined) {
+                html += `
+                    <div class="validation-controls">
+                        <button class="validate-btn" id="validateBtn">✓ APPROVE</button>
+                        <button class="reject-btn" id="rejectBtn">✗ REJECT</button>
+                    </div>
+                `;
             }
 
             // Phase 6: Metrics Dashboard
@@ -913,6 +938,12 @@ TIMESTAMP: ${new Date().toISOString()}
 
             content.innerHTML = html;
 
+            // Attach validation button listeners
+            if (phase.requiresValidation && !isLocked && missionData.validations[phase.id] === undefined) {
+                document.getElementById('validateBtn').addEventListener('click', () => validatePhase(true));
+                document.getElementById('rejectBtn').addEventListener('click', () => validatePhase(false));
+            }
+
             // Update navigation
             document.getElementById('btnBack').disabled = currentPhase === 0 || lockedPhases.includes(currentPhase - 1);
             
@@ -941,6 +972,7 @@ TIMESTAMP: ${new Date().toISOString()}
             
             if (!approved) {
                 swirlCount++;
+                window.swirlCount++;
             }
             
             renderPhase();
@@ -1037,7 +1069,6 @@ TIMESTAMP: ${new Date().toISOString()}
                 }
 
                 if (currentPhase < PHASES.length - 1) {
-                    // Lock completed phase
                     lockedPhases.push(currentPhase);
                     completedPhases.push(currentPhase);
                     missionData.phaseTimestamps[currentPhase] = Date.now();
